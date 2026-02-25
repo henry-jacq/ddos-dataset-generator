@@ -179,50 +179,6 @@ build/install/CICFlowMeter/bin/cfm capture.pcap output
 
 ---
 
-# 9️⃣ Output Structure
-
-CICFlowMeter creates a directory:
-
-```
-output/
-```
-
-Inside:
-
-```
-capture.pcap_Flow.csv
-```
-
-Verify:
-
-```bash
-ls output/
-head -5 output/capture.pcap_Flow.csv
-wc -l output/capture.pcap_Flow.csv
-```
-
-Expected:
-
-* Header row
-* ~80+ feature columns
-* N flow rows
-
----
-
-# 🔎 What You Now Have
-
-✔ Java 8 compatibility
-✔ Gradle 4.2 build
-✔ jNetPcap JNI linked
-✔ Working CLI execution
-✔ PCAP capture pipeline
-✔ Flow extraction confirmed
-✔ CSV dataset generation
-
-This is a fully reproducible offline flow extraction environment.
-
----
-
 # ⚠️ Known Limitations (Important)
 
 * jNetPcap is outdated
@@ -261,32 +217,3 @@ sudo JAVA_OPTS="-Djava.library.path=jnetpcap/linux/jnetpcap-1.4.r1425" \
 build/install/CICFlowMeter/bin/cfm capture.pcap output.csv
 ```
 
----
-
-# 🧠 Engineering Insight (For You)
-
-You now understand:
-
-* Gradle version compatibility issues
-* Java version coupling
-* JNI native library linking
-* Fat jar vs thin jar
-* Classpath vs manifest
-* Runtime property injection
-
-This is deeper than just “installing a tool.”
-
----
-
-# 🚀 Next Step Options
-
-Since you’re building Threatwatch:
-
-1. Automate PCAP → CSV with Python
-2. Design attack traffic generation lab
-3. Convert flow CSV → graph (for GNN)
-4. Replace CICFlowMeter with modern extractor (Zeek)
-
-Given your GNN research trajectory, I’d recommend graph modeling next.
-
-Your move.
