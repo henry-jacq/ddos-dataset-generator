@@ -1,0 +1,36 @@
+
+name: lab
+
+networks:
+  netw:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.10.0.0/16
+          gateway: 10.10.0.1
+
+services:
+  victim:
+    build: ./victim
+    container_name: victim
+    networks:
+      netw:
+        ipv4_address: 10.10.0.100
+    privileged: true                      # needed for tcpdump
+    volumes:
+      - ./pcaps:/pcaps                    # shared folder for pcaps
+    tty: true
+    stdin_open: true
+    command: tail -f /dev/null             # keep running
+
+  attacker:
+    build: ./attacker
+    networks:
+      - netw
+    privileged: true                       # needed for raw sockets
+    volumes:
+      - ./attacker/scripts:/scripts        # attack scripts (live updates)
+    tty: true
+    stdin_open: true
+    command: tail -f /dev/null
+    # No fixed IP – Docker will assign IPs automatically from the subnet
