@@ -4,6 +4,7 @@ name: lab
 networks:
   netw:
     driver: bridge
+    internal: true
     ipam:
       config:
         - subnet: 10.10.0.0/16

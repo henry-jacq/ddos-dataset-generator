@@ -5,6 +5,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     iputils-ping \
     net-tools \
     libpcap-dev \
+    socat \
+    procps \
+     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /root

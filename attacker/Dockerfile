@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     net-tools \
     libpcap-dev \
     tcpdump \
+    procps \
     && rm -rf /var/lib/apt/lists/*
 
 # Install scapy
