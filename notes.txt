@@ -1,0 +1,20 @@
+On victim container:
+
+Start simple UDP listeners that reply.
+
+
+Run socat for UDP replies on common ports. This will cause the victim to generate reverse packets when it receives the attack traffic:
+
+socat -v UDP-RECVFROM:53,fork EXEC:'/bin/cat' &
+socat -v UDP-RECVFROM:123,fork EXEC:'/bin/cat' &
+socat -v UDP-RECVFROM:161,fork EXEC:'/bin/cat' &
+socat -v UDP-RECVFROM:500,fork EXEC:'/bin/cat' &
+
+Now victim will generate reverse packets.
+
+CICFlowMeter will detect flows.
+
+
+python orchestrator.py exec-attacker python3 udp_flood.py 10.10.0.100 360
+
+tcpdump -i eth0 udp -nn -tttt -vv -w udp_flood.pcap
